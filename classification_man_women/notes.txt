@@ -1,3 +1,6 @@
 # Pilihan lain:
 model = models.efficientnet_b0(pretrained=True)  # Lebih ringan
 model = models.mobilenet_v2(pretrained=True)     # Cocok untuk mobile/CPU
+
+train_loader = DataLoader(..., num_workers=0)  # Nonaktifkan multiprocessing
+test_loader = DataLoader(..., num_workers=0)
