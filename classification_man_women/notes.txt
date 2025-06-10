@@ -1,0 +1,3 @@
+# Pilihan lain:
+model = models.efficientnet_b0(pretrained=True)  # Lebih ringan
+model = models.mobilenet_v2(pretrained=True)     # Cocok untuk mobile/CPU
