@@ -58,4 +58,5 @@ with torch.no_grad():
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
 
+print(f'Total correct: {correct}')
 print(f"Akurasi Validasi: {100 * correct / total:.2f}%")
