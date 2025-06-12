@@ -12,7 +12,7 @@ model.fc = nn.Sequential(
 
 # 2. Load State Dict
 try:
-    state_dict = torch.load("checkpoints/best_model3.pth", weights_only=True)
+    state_dict = torch.load("checkpoints/best_model4.pth", weights_only=True)
     model.load_state_dict(state_dict)
 except Exception as e:
     print(f"Error loading model: {e}")
