@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analyze Image with Qwen2.5</h1>
+        <form id="imageForm">
+            <label for="image">Upload Image:</label><br>
+            <input type="file" id="image" name="image" accept="image/*"><br><br>
+
+            <label for="prompt">Prompt:</label><br>
+            <textarea id="prompt" name="prompt" rows="4" cols="50" placeholder="Enter your prompt here..."></textarea><br><br>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        document.getElementById('imageForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById('imageForm'));
+
+            try {
+                const response = await fetch('/analyze_image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h2>Image Description:</h2>
+                    <p>${data.image_description}</p>
+                    <h2>Qwen2.5 Response:</h2>
+                    <p>${data.qwen_response}</p>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing the request.');
+            }
+        });
+    </script>
+</body>
+</html>
