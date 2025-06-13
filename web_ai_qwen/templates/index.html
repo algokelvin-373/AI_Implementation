@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Analyzer</title>
+    <title>Analyze Image with Qwen2.5-VL</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,28 +21,45 @@
 </head>
 <body>
     <div class="container">
-        <h1>Analyze Image with Qwen2.5</h1>
+        <h1>Analyze Image with Qwen2.5-VL</h1>
+
+        <!-- Form untuk upload gambar -->
         <form id="imageForm">
             <label for="image">Upload Image:</label><br>
             <input type="file" id="image" name="image" accept="image/*"><br><br>
-
-            <label for="prompt">Prompt:</label><br>
-            <textarea id="prompt" name="prompt" rows="4" cols="50" placeholder="Enter your prompt here..."></textarea><br><br>
-
+            <div id="imagePreview" style="margin-top: 20px;">
+                <img id="previewImage" src="" alt="Preview" style="max-width: 100%; display: none;">
+            </div>
             <button type="submit">Submit</button>
         </form>
 
+        <!-- Preview gambar -->
+<!--        <div id="imagePreview" style="margin-top: 20px;">-->
+<!--            <img id="previewImage" src="" alt="Preview" style="max-width: 100%; display: none;">-->
+<!--        </div>-->
+
+        <!-- Form untuk masukkan prompt -->
+        <div id="promptSection" style="margin-top: 20px; display: none;">
+            <label for="prompt">Prompt:</label><br>
+            <textarea id="prompt" name="prompt" rows="4" cols="50" placeholder="Enter your prompt here..."></textarea><br><br>
+            <button id="analyzeButton" type="button">Analyze Image</button>
+        </div>
+
+        <!-- Hasil analisis -->
         <div id="result" style="margin-top: 20px;"></div>
     </div>
 
     <script>
+        let uploadedImageUrl = null;  // Variabel global untuk menyimpan image_url
+
+        // Event listener untuk upload gambar
         document.getElementById('imageForm').addEventListener('submit', async (event) => {
             event.preventDefault();
 
             const formData = new FormData(document.getElementById('imageForm'));
 
             try {
-                const response = await fetch('/analyze_image', {
+                const response = await fetch('/upload_image', {
                     method: 'POST',
                     body: formData
                 });
@@ -52,16 +69,53 @@
                 }
 
                 const data = await response.json();
-                const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = `
-                    <h2>Image Description:</h2>
-                    <p>${data.image_description}</p>
-                    <h2>Qwen2.5 Response:</h2>
-                    <p>${data.qwen_response}</p>
-                `;
+                console.log(data);  // Debugging: Periksa respons JSON
+
+                if (data.image_url) {
+                    uploadedImageUrl = data.image_url;  // Simpan image_url secara global
+
+                    // Tampilkan preview gambar
+                    const previewImage = document.getElementById('previewImage');
+                    previewImage.src = uploadedImageUrl;
+                    previewImage.style.display = 'block';
+
+                    // Tampilkan form prompt
+                    const promptSection = document.getElementById('promptSection');
+                    promptSection.style.display = 'block';
+
+                    // Tambahkan event listener untuk tombol Analyze Image
+                    const analyzeButton = document.getElementById('analyzeButton');
+                    analyzeButton.addEventListener('click', async () => {
+                        const prompt = document.getElementById('prompt').value;
+
+                        try {
+                            const response = await fetch('/analyze_image', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ image_url: uploadedImageUrl, prompt })
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+                            const resultDiv = document.getElementById('result');
+                            resultDiv.innerHTML = `
+                                <h2>Qwen2.5-VL Response:</h2>
+                                <p>${data.qwen_response}</p>
+                            `;
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('An error occurred while processing the request.');
+                        }
+                    });
+                } else {
+                    alert('Failed to get image URL from server.');
+                }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred while processing the request.');
+                alert('An error occurred while uploading the image.');
             }
         });
     </script>
