@@ -19,6 +19,7 @@ class Config:
     lr = 0.001  # Learning rate
     num_classes = 2  # 0=man, 1=woman
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f'Using device: {device}')
 
 # Custom padding function
 def pad_to_square(img):
@@ -196,6 +197,16 @@ def plot_history(history):
 
 # 6. Main Execution
 if __name__ == "__main__":
+    # Cek device
+    print(f"Device: {Config.device}")
+
+    if torch.cuda.is_available():
+        print(f"GPU Detected: {torch.cuda.get_device_name(0)}")
+        print(f"CUDA Version: {torch.version.cuda}")
+        print(f"Total GPUs Available: {torch.cuda.device_count()}")
+    else:
+        print("No GPU detected. Using CPU.")
+
     # Initialize
     train_loader, test_loader, class_names = prepare_data()
     print(f"Class mapping: {class_names} -> {list(range(len(class_names)))}")
