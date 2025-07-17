@@ -53,9 +53,8 @@ def analyze_images():
     base_dir = os.path.abspath(os.path.dirname(__file__))
     static_folder = os.path.join(base_dir, 'static')
     uploads_folder = os.path.join(static_folder, 'uploads')
-    
+
     # Prepare messages with all images and the text prompt
-    # {'type': 'image', 'image': 'file://E:\\00_ResearchProject\\AI_Implementation\\web_ai_qwen\\static\\uploads\\8acf8d9b-8f8c-458e-b9e2-f44f0ed1b711.jpg'}
     messages = [
         {
             "role": "user",
@@ -66,10 +65,10 @@ def analyze_images():
         }
     ]
     print(f'Message: {messages}')
-    
+
     # Format text using chat template processor
     text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    
+
     # Process vision information (images)
     image_inputs, video_inputs = process_vision_info(messages)
     inputs = processor(
@@ -79,7 +78,7 @@ def analyze_images():
         padding=True,
         return_tensors="pt",
     ).to(model.device)
-    
+
     # Run inference to generate output text
     generated_ids = model.generate(**inputs, max_new_tokens=128)
     generated_ids_trimmed = [
@@ -88,8 +87,6 @@ def analyze_images():
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
-
-    print(f'Response: {output_text[0]}')
     return jsonify({
         "qwen_response": output_text[0]
     })
