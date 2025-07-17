@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyze Image with Qwen2.5-VL</title>
+    <title>Analyze Images with Qwen2.5-VL</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,11 +24,35 @@
         }
         .image-upload-section {
             margin-top: 20px;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+        }
+        .image-upload-section:hover {
+            background-color: #f0f0f0;
+        }
+        .image-upload-section p {
+            margin: 0;
+            color: #777;
+        }
+        .image-upload-section button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .image-upload-section button:hover {
+            background-color: #0056b3;
         }
         .image-preview {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            margin-top: 20px;
         }
         .image-preview img {
             max-width: 200px;
@@ -37,10 +61,6 @@
             border-radius: 8px;
         }
         .prompt-section {
-            margin-top: 20px;
-            display: none;
-        }
-        .result-section {
             margin-top: 20px;
         }
         button {
@@ -61,39 +81,73 @@
             font-size: 16px;
             resize: vertical;
         }
+        .add-image-button {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .add-image-button span {
+            font-size: 24px;
+            color: #007BFF;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Analyze Images with Qwen2.5-VL</h1>
         <!-- Form untuk upload gambar -->
-        <form id="imageForm">
-            <div class="image-upload-section">
-                <label for="images">Upload Images:</label><br>
-                <input type="file" id="images" name="images" accept="image/*" multiple><br><br>
-                <div id="imagePreview" class="image-preview"></div>
-            </div>
-            <button type="submit">Submit</button>
-        </form>
+        <div class="image-upload-section">
+            <p>Pilih Gambar</p>
+            <p>Atau jatuhkan di sini</p>
+            <button id="uploadButton">Unggah</button>
+            <input type="file" id="images" name="images" accept="image/*" style="display: none;" multiple>
+            <span class="add-image-button" id="addImageButton"><span>+</span></span>
+        </div>
+        <div id="imagePreview" class="image-preview"></div>
         <!-- Form untuk masukkan prompt -->
-        <div id="promptSection" class="prompt-section">
+        <div id="promptSection" class="prompt-section" style="display: none;">
             <label for="prompt">Prompt:</label><br>
             <textarea id="prompt" name="prompt" rows="4" cols="50" placeholder="Enter your prompt here..."></textarea><br><br>
             <button id="analyzeButton" type="button">Analyze Images</button>
         </div>
         <!-- Hasil analisis -->
-        <div id="result" class="result-section"></div>
+        <div id="result" style="margin-top: 20px;"></div>
     </div>
-
     <script>
         let uploadedImageUrls = []; // Array to store multiple image URLs
 
-        // Event listener untuk upload gambar
-        document.getElementById('imageForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const formData = new FormData(document.getElementById('imageForm'));
+        // Event listener for the "Unggah" button
+        document.getElementById('uploadButton').addEventListener('click', () => {
+            document.getElementById('images').click();
+        });
+
+        // Event listener for the "+" icon
+        document.getElementById('addImageButton').addEventListener('click', () => {
+            document.getElementById('images').click();
+        });
+
+        // Event listener for file input change
+        document.getElementById('images').addEventListener('change', async () => {
+            const files = document.getElementById('images').files;
+            if (!files || files.length === 0) return;
+
             try {
-                const response = await fetch('/upload_images', { // Changed endpoint to handle multiple images
+                const formData = new FormData();
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('images', files[i]);
+                }
+
+                const response = await fetch('/upload_images', {
                     method: 'POST',
                     body: formData
                 });
@@ -101,10 +155,10 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                console.log(data); // Debugging: Periksa respons JSON
+                console.log(data); // Debugging: Check JSON response
                 if (data.image_urls && data.image_urls.length > 0) {
-                    uploadedImageUrls = data.image_urls; // Simpan semua image_urls
-                    // Tampilkan preview gambar
+                    uploadedImageUrls = [...uploadedImageUrls, ...data.image_urls]; // Append new image URLs
+                    // Display previews for all uploaded images
                     const imagePreviewDiv = document.getElementById('imagePreview');
                     imagePreviewDiv.innerHTML = ''; // Clear previous previews
                     uploadedImageUrls.forEach(url => {
@@ -116,15 +170,15 @@
                         imgElement.style.borderRadius = '8px';
                         imagePreviewDiv.appendChild(imgElement);
                     });
-                    // Tampilkan form prompt
+                    // Show prompt section
                     const promptSection = document.getElementById('promptSection');
                     promptSection.style.display = 'block';
-                    // Tambahkan event listener untuk tombol Analyze Images
+                    // Add event listener for Analyze Images button
                     const analyzeButton = document.getElementById('analyzeButton');
                     analyzeButton.addEventListener('click', async () => {
                         const prompt = document.getElementById('prompt').value;
                         try {
-                            const response = await fetch('/analyze_images', { // Changed endpoint to handle multiple images
+                            const response = await fetch('/analyze_images', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ image_urls: uploadedImageUrls, prompt })
