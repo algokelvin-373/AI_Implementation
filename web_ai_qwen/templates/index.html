@@ -173,36 +173,40 @@
                     // Show prompt section
                     const promptSection = document.getElementById('promptSection');
                     promptSection.style.display = 'block';
-                    // Add event listener for Analyze Images button
-                    const analyzeButton = document.getElementById('analyzeButton');
-                    analyzeButton.addEventListener('click', async () => {
-                        const prompt = document.getElementById('prompt').value;
-                        try {
-                            const response = await fetch('/analyze_images', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ image_urls: uploadedImageUrls, prompt })
-                            });
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            const data = await response.json();
-                            const resultDiv = document.getElementById('result');
-                            resultDiv.innerHTML = `
-                                <h2>Qwen2.5-VL Response:</h2>
-                                <p>${data.qwen_response}</p>
-                            `;
-                        } catch (error) {
-                            console.error('Error:', error);
-                            alert('An error occurred while processing the request.');
-                        }
-                    });
                 } else {
                     alert('Failed to get image URLs from server.');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred while uploading the images.');
+            }
+        });
+
+        // Event listener for Analyze Images button (attached only once)
+        document.getElementById('analyzeButton').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) {
+                alert('Please enter a prompt.');
+                return;
+            }
+            try {
+                const response = await fetch('/analyze_images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_urls: uploadedImageUrls, prompt })
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h2>Qwen2.5-VL Response:</h2>
+                    <p>${data.qwen_response}</p>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing the request.');
             }
         });
     </script>

@@ -55,6 +55,7 @@ def analyze_images():
     uploads_folder = os.path.join(static_folder, 'uploads')
     
     # Prepare messages with all images and the text prompt
+    # {'type': 'image', 'image': 'file://E:\\00_ResearchProject\\AI_Implementation\\web_ai_qwen\\static\\uploads\\8acf8d9b-8f8c-458e-b9e2-f44f0ed1b711.jpg'}
     messages = [
         {
             "role": "user",
@@ -87,6 +88,8 @@ def analyze_images():
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
+
+    print(f'Response: {output_text[0]}')
     return jsonify({
         "qwen_response": output_text[0]
     })
