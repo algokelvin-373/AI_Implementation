@@ -8,97 +8,130 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #f4f4f4;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        img {
-            max-width: 100%;
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .image-upload-section {
+            margin-top: 20px;
+        }
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .image-preview img {
+            max-width: 200px;
             height: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .prompt-section {
+            margin-top: 20px;
+            display: none;
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            resize: vertical;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Analyze Image with Qwen2.5-VL</h1>
-
+        <h1>Analyze Images with Qwen2.5-VL</h1>
         <!-- Form untuk upload gambar -->
         <form id="imageForm">
-            <label for="image">Upload Image:</label><br>
-            <input type="file" id="image" name="image" accept="image/*"><br><br>
-            <div id="imagePreview" style="margin-top: 20px;">
-                <img id="previewImage" src="" alt="Preview" style="max-width: 100%; display: none;">
+            <div class="image-upload-section">
+                <label for="images">Upload Images:</label><br>
+                <input type="file" id="images" name="images" accept="image/*" multiple><br><br>
+                <div id="imagePreview" class="image-preview"></div>
             </div>
             <button type="submit">Submit</button>
         </form>
-
-        <!-- Preview gambar -->
-<!--        <div id="imagePreview" style="margin-top: 20px;">-->
-<!--            <img id="previewImage" src="" alt="Preview" style="max-width: 100%; display: none;">-->
-<!--        </div>-->
-
         <!-- Form untuk masukkan prompt -->
-        <div id="promptSection" style="margin-top: 20px; display: none;">
+        <div id="promptSection" class="prompt-section">
             <label for="prompt">Prompt:</label><br>
             <textarea id="prompt" name="prompt" rows="4" cols="50" placeholder="Enter your prompt here..."></textarea><br><br>
-            <button id="analyzeButton" type="button">Analyze Image</button>
+            <button id="analyzeButton" type="button">Analyze Images</button>
         </div>
-
         <!-- Hasil analisis -->
-        <div id="result" style="margin-top: 20px;"></div>
+        <div id="result" class="result-section"></div>
     </div>
 
     <script>
-        let uploadedImageUrl = null;  // Variabel global untuk menyimpan image_url
+        let uploadedImageUrls = []; // Array to store multiple image URLs
 
         // Event listener untuk upload gambar
         document.getElementById('imageForm').addEventListener('submit', async (event) => {
             event.preventDefault();
-
             const formData = new FormData(document.getElementById('imageForm'));
-
             try {
-                const response = await fetch('/upload_image', {
+                const response = await fetch('/upload_images', { // Changed endpoint to handle multiple images
                     method: 'POST',
                     body: formData
                 });
-
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
                 const data = await response.json();
-                console.log(data);  // Debugging: Periksa respons JSON
-
-                if (data.image_url) {
-                    uploadedImageUrl = data.image_url;  // Simpan image_url secara global
-
+                console.log(data); // Debugging: Periksa respons JSON
+                if (data.image_urls && data.image_urls.length > 0) {
+                    uploadedImageUrls = data.image_urls; // Simpan semua image_urls
                     // Tampilkan preview gambar
-                    const previewImage = document.getElementById('previewImage');
-                    previewImage.src = uploadedImageUrl;
-                    previewImage.style.display = 'block';
-
+                    const imagePreviewDiv = document.getElementById('imagePreview');
+                    imagePreviewDiv.innerHTML = ''; // Clear previous previews
+                    uploadedImageUrls.forEach(url => {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = url;
+                        imgElement.style.maxWidth = '200px';
+                        imgElement.style.height = 'auto';
+                        imgElement.style.border = '1px solid #ddd';
+                        imgElement.style.borderRadius = '8px';
+                        imagePreviewDiv.appendChild(imgElement);
+                    });
                     // Tampilkan form prompt
                     const promptSection = document.getElementById('promptSection');
                     promptSection.style.display = 'block';
-
-                    // Tambahkan event listener untuk tombol Analyze Image
+                    // Tambahkan event listener untuk tombol Analyze Images
                     const analyzeButton = document.getElementById('analyzeButton');
                     analyzeButton.addEventListener('click', async () => {
                         const prompt = document.getElementById('prompt').value;
-
                         try {
-                            const response = await fetch('/analyze_image', {
+                            const response = await fetch('/analyze_images', { // Changed endpoint to handle multiple images
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ image_url: uploadedImageUrl, prompt })
+                                body: JSON.stringify({ image_urls: uploadedImageUrls, prompt })
                             });
-
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`);
                             }
-
                             const data = await response.json();
                             const resultDiv = document.getElementById('result');
                             resultDiv.innerHTML = `
@@ -111,11 +144,11 @@
                         }
                     });
                 } else {
-                    alert('Failed to get image URL from server.');
+                    alert('Failed to get image URLs from server.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred while uploading the image.');
+                alert('An error occurred while uploading the images.');
             }
         });
     </script>
