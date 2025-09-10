@@ -114,7 +114,7 @@ def train_model():
                 correct_val += predicted.eq(labels).sum().item()
         val_acc = 100. * correct_val / total_val
 
-        # Simpan hasil epoch ke log
+        # Save result epoch ke log
         log_data.append({
             'Epoch': epoch + 1,
             'Train Loss': f"{avg_loss:.4f}",
@@ -125,20 +125,20 @@ def train_model():
         # Tampilkan tabel tiap epoch (opsional: bisa dihapus jika terlalu banyak)
         # Tapi kita akan tampilkan ringkasan akhir saja, atau update tabel secara dinamis
 
-        # Tampilkan tabel hasil semua epoch di akhir
+        # Show tabel result all epoch
         print("\n" + "=" * 60)
         print("📊 RINGKASAN PELATIHAN PER EPOCH")
         print("=" * 60)
         df_log = pd.DataFrame(log_data)
         print(tabulate(df_log, headers='keys', tablefmt='grid', showindex=False))
 
-        # Simpan model
+        # Save model
         os.makedirs("models", exist_ok=True)
         model_path = "models/fullbody_classifier_22072025000001.pth"
         torch.save(model.state_dict(), model_path)
         print(f"\n✅ Model berhasil disimpan di: {model_path}")
 
-        # Simpan log ke file CSV (opsional, sangat berguna untuk analisis lanjut)
+        # Save log to file CSV (optional, very useful for analysis)
         log_df = pd.DataFrame(log_data)
         log_df.to_csv("training_log.csv", index=False)
         print(f"📊 Log pelatihan disimpan ke 'training_log.csv'")
