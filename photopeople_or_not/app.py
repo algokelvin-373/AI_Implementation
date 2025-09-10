@@ -1,12 +1,14 @@
 # app.py - Full-body vs Non-Human Image Classifier
 
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models, transforms
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-import os
 from tqdm import tqdm
 import argparse
 
@@ -103,6 +105,8 @@ def train_model():
     print(f"\n✅ Model berhasil disimpan di: {model_path}")
 
 if __name__ == "__main__":
+
+
     parser = argparse.ArgumentParser(description="Latih model deteksi full-body manusia.")
     args = parser.parse_args()
 
