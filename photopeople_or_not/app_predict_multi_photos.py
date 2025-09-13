@@ -85,7 +85,7 @@ def main():
     args = parser.parse_args()
 
     # Path model
-    model_path = "models/fullbody_classifier_22072025000001.pth"
+    model_path = "models/fullbody_classifier_13092025000001.pth"
 
     # Load model
     print("🚀 Memuat model...")
