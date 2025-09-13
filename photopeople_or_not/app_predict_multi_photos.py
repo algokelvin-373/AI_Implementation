@@ -64,7 +64,7 @@ def predict_folder(folder_path, model):
     results = {}
     for img_path in image_paths:
         filename = os.path.basename(img_path)
-        print(f"  → {filename} ... ", end="")
+        print(f"  → {filename} ... \t\t", end="")
         start = time.time() * 1000.0
         result = predict_image(img_path, model)
         end = time.time() * 1000.0
