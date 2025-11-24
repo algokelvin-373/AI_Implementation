@@ -30,7 +30,7 @@ val_generator = val_datagen.flow_from_directory(
     class_mode='categorical'
 )
 
-# Build model CNN
+# Build models CNN
 model = models.Sequential([
     layers.Conv2D(32, (3,3), activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
     layers.MaxPooling2D(2,2),
@@ -47,12 +47,12 @@ model.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-# Training model
+# Training models
 history = model.fit(
     train_generator,
     epochs=EPOCHS,
     validation_data=val_generator
 )
 
-# Save model
+# Save models
 model.save('../models/saved_model.h5')

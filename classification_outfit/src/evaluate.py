@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-# Load model
+# Load models
 model = tf.keras.models.load_model('../models/saved_model.h5')
 
 # Load test data
