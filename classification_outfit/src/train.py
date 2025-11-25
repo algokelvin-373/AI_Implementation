@@ -1,6 +1,6 @@
-import tensorflow as tf
 from tensorflow.keras import layers, models
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from datetime import datetime
 
 # Configurations
 IMG_HEIGHT = 150
@@ -55,4 +55,5 @@ history = model.fit(
 )
 
 # Save models
-model.save('../models/saved_model.h5')
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+model.save(f'../models/saved_model_{timestamp}.h5')
