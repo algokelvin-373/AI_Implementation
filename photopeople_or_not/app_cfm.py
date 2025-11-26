@@ -1,8 +1,6 @@
-# app.py - Full-body vs Non-Human Image Classifier
-
+# app.py - Full-body vs Non-Human Image Classifier with Confusion Matrix
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -13,20 +11,7 @@ from tqdm import tqdm
 import argparse
 import pandas as pd
 from tabulate import tabulate  # Untuk tampilan tabel rapi
-
-# Notes:
-# Model klasifikasi gambar berbasis Deep Learning menggunakan Convolutional Neural Network (CNN)
-# dengan arsitektur ResNet-18 dan teknik Trasnfer Learning.
-# 🔹 Arsitektur Model
-# Pre-trained ResNet-18 diambil dari torchvision.models.
-# Layer terakhir (fc) diganti agar sesuai dengan jumlah kelas (dalam hal ini 2: fullbody dan non-human).
-# Model dilatih ulang (fine-tuned) pada dataset lokal.
-# 🔹 Proses Pelatihan
-# Optimizer: Adam (dengan learning rate 0.0001)
-# Loss Function: Cross-Entropy Loss (umum untuk klasifikasi)
-# Epoch: 10
-# Batch Size: 32
-# Data Augmentation: Hanya resize dan normalisasi (belum ada augmentasi seperti rotasi, flip, dll — bisa jadi peluang peningkatan)
+from sklearn.metrics import confusion_matrix, classification_report
 
 def train_model():
     # Device configuration
@@ -42,7 +27,7 @@ def train_model():
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),  # ImageNet norms
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     # Check dataset path
@@ -60,11 +45,11 @@ def train_model():
 
     print(f"Jumlah data latih: {len(train_dataset)}")
     print(f"Jumlah data validasi: {len(val_dataset)}")
-    print(f"Kelas: {train_dataset.classes}")  # e.g., ['full body', 'non-human']
+    print(f"Kelas: {train_dataset.classes}")  # e.g., ['human', 'non-human']
 
     # Load pre-trained ResNet18
     model = models.resnet18(pretrained=True)
-    model.fc = nn.Linear(model.fc.in_features, len(train_dataset.classes))  # total kelas
+    model.fc = nn.Linear(model.fc.in_features, len(train_dataset.classes))
     model = model.to(device)
 
     # Loss and optimizer
@@ -81,7 +66,7 @@ def train_model():
         total_loss = 0
         correct = 0
         total = 0
-        for images, labels in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs} - Training"):
+        for images, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
             images = images.to(device)
             labels = labels.to(device)
 
@@ -100,10 +85,13 @@ def train_model():
         train_acc = 100. * correct / total
         avg_loss = total_loss / len(train_loader)
 
-        # Validation
+        # Validation phase
         model.eval()
         correct_val = 0
         total_val = 0
+        all_labels = []
+        all_preds = []
+
         with torch.no_grad():
             for images, labels in val_loader:
                 images = images.to(device)
@@ -112,9 +100,12 @@ def train_model():
                 _, predicted = outputs.max(1)
                 total_val += labels.size(0)
                 correct_val += predicted.eq(labels).sum().item()
+                all_labels.extend(labels.cpu().numpy())
+                all_preds.extend(predicted.cpu().numpy())
+
         val_acc = 100. * correct_val / total_val
 
-        # Save result epoch ke log
+        # Simpan hasil epoch ke log
         log_data.append({
             'Epoch': epoch + 1,
             'Train Loss': f"{avg_loss:.4f}",
@@ -122,30 +113,38 @@ def train_model():
             'Val Acc (%)': f"{val_acc:.2f}"
         })
 
-        # Tampilkan tabel tiap epoch (opsional: bisa dihapus jika terlalu banyak)
-        # Tapi kita akan tampilkan ringkasan akhir saja, atau update tabel secara dinamis
+    # Tampilkan tabel hasil semua epoch
+    print("\n" + "="*60)
+    print("📊 RINGKASAN PELATIHAN PER EPOCH")
+    print("="*60)
+    df_log = pd.DataFrame(log_data)
+    print(tabulate(df_log, headers='keys', tablefmt='grid', showindex=False))
 
-        # Show tabel result all epoch
-        print("\n" + "=" * 60)
-        print("📊 RINGKASAN PELATIHAN PER EPOCH")
-        print("=" * 60)
-        df_log = pd.DataFrame(log_data)
-        print(tabulate(df_log, headers='keys', tablefmt='grid', showindex=False))
+    # Tampilkan Confusion Matrix & Classification Report
+    print("\n" + "="*60)
+    print("📈 CONFUSION MATRIX & CLASSIFICATION REPORT")
+    print("="*60)
+    cm = confusion_matrix(all_labels, all_preds)
+    print("Confusion Matrix:")
+    print(cm)
 
-        # Save model
-        os.makedirs("models", exist_ok=True)
-        model_path = "models/fullbody_classifier_22072025000001.pth"
-        torch.save(model.state_dict(), model_path)
-        print(f"\n✅ Model berhasil disimpan di: {model_path}")
+    class_names = train_dataset.classes
+    print("\nClassification Report:")
+    print(classification_report(all_labels, all_preds, target_names=class_names))
 
-        # Save log to file CSV (optional, very useful for analysis)
-        log_df = pd.DataFrame(log_data)
-        log_df.to_csv("training_log.csv", index=False)
-        print(f"📊 Log pelatihan disimpan ke 'training_log.csv'")
+    # Simpan model
+    os.makedirs("models", exist_ok=True)
+    model_path = "models/fullbody_classifier_13092025000001.pth"
+    torch.save(model.state_dict(), model_path)
+    print(f"\n✅ Model berhasil disimpan di: {model_path}")
+
+    # Simpan log ke file CSV
+    log_df = pd.DataFrame(log_data)
+    log_df.to_csv("training_log_13092025000001.csv", index=False)
+    print(f"📊 Log pelatihan disimpan ke 'training_log_13092025000001.csv'")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Latih model deteksi full-body manusia.")
     args = parser.parse_args()
-
     print("🚀 Memulai pelatihan model...")
     train_model()
