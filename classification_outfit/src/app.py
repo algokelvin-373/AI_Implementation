@@ -23,31 +23,31 @@ class ClothingClassifierApp:
         self.root.geometry("600x700")
         self.root.resizable(False, False)
 
-        # Judul
+        # Title
         title = tk.Label(root, text="👗 AI Klasifikasi Pakaian", font=("Arial", 18, "bold"))
         title.pack(pady=10)
 
-        # Tombol upload
+        # Add Button upload
         self.btn_upload = tk.Button(root, text="Upload Gambar", command=self.upload_image, font=("Arial", 12))
         self.btn_upload.pack(pady=10)
 
-        # Area gambar
+        # Area Image
         self.image_label = tk.Label(root, bg="lightgray", width=400, height=300)
         self.image_label.pack(pady=10)
 
-        # Area hasil
+        # Area Result
         self.result_label = tk.Label(root, text="Belum ada prediksi", font=("Arial", 14), fg="blue")
         self.result_label.pack(pady=10)
 
         self.confidence_label = tk.Label(root, text="", font=("Arial", 12), fg="green")
         self.confidence_label.pack()
 
-        # Penjelasan
+        # Description
         info = tk.Label(root, text="Model: 4 kelas (Top, Bottom, Shoes, Other)\nAkurasi: ~97%", font=("Arial", 10), fg="gray")
         info.pack(side="bottom", pady=10)
 
     def upload_image(self):
-        # Pilih file gambar
+        # Choose file image
         file_path = filedialog.askopenfilename(
             title="Pilih Gambar",
             filetypes=[("Image Files", "*.jpg *.jpeg *.png *.bmp")]
@@ -56,18 +56,18 @@ class ClothingClassifierApp:
             return
 
         try:
-            # Muat dan tampilkan gambar
+            # Upload dan show image
             img = Image.open(file_path)
             img_display = img.copy()
-            img_display.thumbnail((400, 300))  # Ukuran tampilan
+            img_display.thumbnail((400, 300))
             photo = ImageTk.PhotoImage(img_display)
             self.image_label.configure(image=photo, bg="white")
-            self.image_label.image = photo  # Simpan referensi
+            self.image_label.image = photo
 
-            # Prediksi
+            # Prediction
             prediction, confidence = self.predict_image(img)
 
-            # Tampilkan hasil
+            # Show Result
             self.result_label.config(text=f"Prediksi: {prediction}")
             self.confidence_label.config(text=f"Akurasi: {confidence:.2f}%")
 
@@ -85,7 +85,7 @@ class ClothingClassifierApp:
         img_array = img_array / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
-        # Prediksi
+        # Prediction
         predictions = model.predict(img_array, verbose=0)
         predicted_class = CLASS_NAMES[np.argmax(predictions)]
         confidence = np.max(predictions) * 100
